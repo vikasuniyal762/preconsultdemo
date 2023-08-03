@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +15,7 @@ import 'package:medongosupport/preConsultModule/view/faceDetectionModules/camera
 import 'package:medongosupport/preConsultModule/view/faceDetectionModules/painter.dart';
 import 'package:medongosupport/preConsultModule/widgets/toastMessage.dart';
 import 'package:medongosupport/preConsultModule/widgets/willPopScope.dart';
+import 'package:image_picker/image_picker.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key});
@@ -48,6 +49,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       debugPrint("$error");
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,9 +103,19 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         inputImage.inputImageData!.imageRotation,
       );
 
+      ///vikas
+
+
+
 
       if (faces.length==1) {
         preConsultationController.faceCount.value = 1;
+        final cropFace = faces.first;
+        preConsultationController.left.value = cropFace.boundingBox.left.toInt();
+        preConsultationController.top.value = cropFace.boundingBox.top.toInt();
+        preConsultationController.width.value = cropFace.boundingBox.width.toInt()*2;
+        preConsultationController.height.value = cropFace.boundingBox.height.toInt()*2;
+
       }
       if(faces.length>1){
         preConsultationController.faceCount.value = 2;
@@ -111,7 +123,6 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       if (faces.isEmpty) {
         preConsultationController.faceCount.value = 0;
       }
-
       preConsultationController.customPaint = CustomPaint(painter: painter);
       preConsultationController.isBusy.value = false;
 

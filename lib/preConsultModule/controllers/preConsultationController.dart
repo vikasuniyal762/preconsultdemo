@@ -19,6 +19,7 @@ import 'package:medongosupport/preConsultModule/view/questionModules/questionsSc
 import 'package:medongosupport/preConsultModule/widgets/fullScreenImage.dart';
 import 'package:medongosupport/preConsultModule/widgets/toastMessage.dart';
 import 'package:light/light.dart';
+import 'package:image/image.dart' as img;
 
 import '../widgets/alertDialogs.dart';
 
@@ -240,8 +241,10 @@ class PCPreConsultationController extends GetxController {
   ///FACE DETECTION CONTROLLER FIELDS
   final FaceDetector faceDetector = FaceDetector(
     options: FaceDetectorOptions(
+      performanceMode: FaceDetectorMode.accurate,
       enableContours: true,
-      enableClassification: true,
+      enableLandmarks: true,
+      //enableClassification: true,
     ),
   );
 
@@ -254,12 +257,12 @@ class PCPreConsultationController extends GetxController {
   RxString bottomMessage = "PLEASE START THE RECORDING".obs;
 
   ///VIKAS CHANGES
-  RxDouble imageheight = (0.0).obs;
-  RxDouble imagewidth = (0.0).obs;
-  RxDouble left =(0.0).obs;
-  RxDouble top =(0.0).obs;
-  RxDouble right =(0.0).obs;
-  RxDouble bottom =(0.0).obs;
+  RxInt imageheight = 0.obs;
+  RxInt imagewidth = 0.obs;
+  RxInt left =0.obs;
+  RxInt top =0.obs;
+  RxInt width =0.obs;
+  RxInt height =0.obs;
 
   ///ANDROID NATIVE DATA TRANSFER MODEL
   AndroidNativeDataTransferModel androidNativeDataTransferModel =
@@ -309,8 +312,26 @@ class PCPreConsultationController extends GetxController {
 
       // Future.delayed(const Duration(milliseconds: 10));
       ///TAKE IMAGE
+
       final XFile imageFile = await cameraSingleton.cameraController.takePicture();
+
+
       final File capturedImage = File(imageFile.path);
+      ///   HERE
+
+           final originalImage = img.decodeImage(await capturedImage!.readAsBytes());
+              final faceImage = img.copyCrop(originalImage!,
+                  x:preConsultationController.left.value,
+                  y:preConsultationController.top.value,
+                  width:preConsultationController.width.value,
+                  height:preConsultationController.height.value);
+              final croppedPath = capturedImage.path;
+                  //.replaceFirst('.jpg', '_cropped.jpg');
+              final croppedImage = File(croppedPath).writeAsBytes(img.encodeJpg(faceImage));
+
+      ///
+
+
 
 
       ///ADDS FILE TO _profileImage folder

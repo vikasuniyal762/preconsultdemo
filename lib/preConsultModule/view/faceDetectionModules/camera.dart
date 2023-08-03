@@ -14,11 +14,12 @@ import 'package:medongosupport/preConsultModule/consts/screenSize.dart';
 import 'package:medongosupport/preConsultModule/controllers/preConsultationController.dart';
 import 'package:medongosupport/preConsultModule/controllers/questionsController.dart';
 import 'package:medongosupport/preConsultModule/widgets/alertDialogs.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'dart:ui' as ui;
 import '../../models/videoErrorModel.dart';
 import '../questionModules/questionsScreen.dart';
-import 'package:image_cropper/image_cropper.dart';
+  import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
@@ -99,6 +100,7 @@ class _CameraViewState extends State<CameraView>
 
   ///
   late CameraSingleton cameraSingleton;
+
 
   @override
   void initState() {
@@ -502,7 +504,6 @@ class _CameraViewState extends State<CameraView>
         preConsultationController.frameCounter.value++;
         break;
       case 1:
-        _cropImage(image);
         preConsultationController.frameCounter.value++;
         break;
       case 2:
@@ -962,58 +963,108 @@ class _CameraViewState extends State<CameraView>
     videoErrorLog.add(errorDetailVideo);
   }
 
-  //XFile? _pickedFile;
-  CroppedFile? _croppedFile;
+  // //XFile? _pickedFile;
+  // CroppedFile? _croppedFile;
 
-  Future<void> _cropImage(CameraImage image) async {
-    if (image != null) {
-      final double imageWidth = image.width.toDouble();
-      final double imageHeight = image.height.toDouble();
-      print('Image size: $imageWidth x $imageHeight');
-
-      // Calculate the coordinates of the bounding box within the image
-      double left = preConsultationController.left.value;
-      double top = preConsultationController.top.value;
-      double right = preConsultationController.right.value;
-      double bottom = preConsultationController.bottom.value;
-      print('Bounding box coordinates: left=$left, top=$top, right=$right, bottom=$bottom');
-
-      // Convert CameraImage to Image
-      img.Image convertedImage = _convertCameraImageToImage(image);
-
-      // Crop the image based on the bounding box parameters
-      int x = (left * imageWidth).round();
-      int y = (top * imageHeight).round();
-      int width = ((right - left) * imageWidth).round();
-      int height = ((bottom - top) * imageHeight).round();
-
-      if (x < 0) x = 0;
-      if (y < 0) y = 0;
-      if (x + width > imageWidth) width = (imageWidth - x).round();
-      if (y + height > imageHeight) height = (imageHeight - y).round();
-
-      img.Image croppedImage = img.copyCrop(x: x, y: y, width: width, height: height);
-
-      // If needed, resize the cropped image to a specific size
-      // img.Image resizedImage = img.copyResize(croppedImage, newWidth, newHeight);
-
-      // Optionally, you can convert the cropped image back to bytes for further processing
-      //List<int> croppedBytes = img.encodeJpg(croppedImage);
-
-      // Now you can use the croppedBytes as needed
-    }
-  }
-
-// Helper function to convert CameraImage to Image
-  img.Image _convertCameraImageToImage(CameraImage image) {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final bytes = allBytes.done().buffer.asUint8List();
-    return img.decodeImage(bytes)!;
-  }
-
+//   Future<void> _cropImage(CameraImage image) async {
+//     if (image != null) {
+//       final double imageWidth = image.width.toDouble();
+//       final double imageHeight = image.height.toDouble();
+//       print('Image size: $imageWidth x $imageHeight');
+//
+//       // Calculate the coordinates of the bounding box within the image
+//       double left = preConsultationController.left.value;
+//       double top = preConsultationController.top.value;
+//       double right = preConsultationController.right.value;
+//       double bottom = preConsultationController.bottom.value;
+//       print('Bounding box coordinates: left=$left, top=$top, right=$right, bottom=$bottom');
+//
+//       // Convert CameraImage to Image
+//       img.Image convertedImage = _convertCameraImageToImage(image);
+//
+//       // Crop the image based on the bounding box parameters
+//       int x = (left * imageWidth).round();
+//       int y = (top * imageHeight).round();
+//       int width = ((right - left) * imageWidth).round();
+//       int height = ((bottom - top) * imageHeight).round();
+//
+//       if (x < 0) x = 0;
+//       if (y < 0) y = 0;
+//       if (x + width > imageWidth) width = (imageWidth - x).round();
+//       if (y + height > imageHeight) height = (imageHeight - y).round();
+//
+//       img.Image croppedImage = img.copyCrop(x: x, y: y, width: width, height: height);
+//
+//       // If needed, resize the cropped image to a specific size
+//       // img.Image resizedImage = img.copyResize(croppedImage, newWidth, newHeight);
+//
+//       // Optionally, you can convert the cropped image back to bytes for further processing
+//       //List<int> croppedBytes = img.encodeJpg(croppedImage);
+//
+//       // Now you can use the croppedBytes as needed
+//     }
+//   }
+//
+// // Helper function to convert CameraImage to Image
+//   img.Image _convertCameraImageToImage(CameraImage image) {
+//     final WriteBuffer allBytes = WriteBuffer();
+//     for (final Plane plane in image.planes) {
+//       allBytes.putUint8List(plane.bytes);
+//     }
+//     final bytes = allBytes.done().buffer.asUint8List();
+//     return img.decodeImage(bytes)!;
+//   }
+///today
+//   Future<Uint8List> cropImage(
+//       Uint8List inputImage,
+//       double left,
+//       double top,
+//       double width,
+//       double height,
+//       ) async {
+//     final double left = preConsultationController.left.value.toDouble();
+//     final double top = preConsultationController.top.value.toDouble();
+//     final double width = preConsultationController.right.value.toDouble() - preConsultationController.left.value.toDouble();
+//     final double height = preConsultationController.bottom.value.toDouble() - preConsultationController.top.value.toDouble();
+//
+//     final img.Image image = img.decodeImage(inputImage)!;
+//     print('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh$image');
+//     final img.Image croppedImage = img.copyCrop(image,x: left.toInt(), y: top.toInt(), width: width.toInt(), height: height.toInt());
+//     final Uint8List croppedBytes = img.encodePng(croppedImage);
+//
+//     return croppedBytes;
+//   }
+//
+//   Future<void> saveImageToDisk(Uint8List bytes) async {
+//     final directory = await getApplicationDocumentsDirectory();
+//     final file = File('${directory.path}/cropped_image.png');
+//     await file.writeAsBytes(bytes);
+//   }
+//
+//   Future<void> cropAndSaveImage() async {
+//     // Replace this with your actual captureImage() function to get the image bytes.
+//     Uint8List inputImage = captureImage().image;
+//     print('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhaaaaaaaaaaaaaaakllhhklsakdhaklhadsklh$inputImage');
+//
+//     // Define the cropping parameters.
+//     // double left = preConsultationController.left.value;
+//     // double top = preConsultationController.top.value;
+//     // double width = preConsultationController.right.value - preConsultationController.left.value;
+//     // double height = preConsultationController.bottom.value - preConsultationController.top.value;
+//
+//     try {
+//     Uint8List croppedBytes = await cropImage(inputImage,
+//         preConsultationController.left.value,
+//         preConsultationController.top.value,
+//         preConsultationController.right.value - preConsultationController.left.value,
+//         preConsultationController.bottom.value - preConsultationController.top.value);
+//     print('areee aye gi reeeeeeeeeeeee hue gi ...................................kkkkkkkkkkkkkk$croppedBytes');
+//     await saveImageToDisk(croppedBytes);
+//     print("Cropped image saved to disk.");
+//     } catch (e) {
+//     print("Error while cropping and saving the image: $e");
+//     }
+//   }
 
 
 }
