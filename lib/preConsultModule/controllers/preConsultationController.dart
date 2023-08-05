@@ -264,6 +264,8 @@ class PCPreConsultationController extends GetxController {
   RxInt width =0.obs;
   RxInt height =0.obs;
 
+
+
   ///ANDROID NATIVE DATA TRANSFER MODEL
   AndroidNativeDataTransferModel androidNativeDataTransferModel =
   AndroidNativeDataTransferModel(
@@ -317,7 +319,8 @@ class PCPreConsultationController extends GetxController {
 
 
       final File capturedImage = File(imageFile.path);
-      ///   HERE
+      ///   VIKAS CHANGES
+
 
            final originalImage = img.decodeImage(await capturedImage!.readAsBytes());
               final faceImage = img.copyCrop(originalImage!,

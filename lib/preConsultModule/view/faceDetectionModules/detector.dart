@@ -103,11 +103,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         inputImage.inputImageData!.imageRotation,
       );
 
-      ///vikas
-
-
-
-
+      ///vikas chnages
       if (faces.length==1) {
         preConsultationController.faceCount.value = 1;
         final cropFace = faces.first;
@@ -117,6 +113,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         preConsultationController.height.value = cropFace.boundingBox.height.toInt()*2;
 
       }
+
+      ///vikas chnages
+
       if(faces.length>1){
         preConsultationController.faceCount.value = 2;
       }
@@ -137,4 +136,5 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       debugPrint("$error");
     }
   }
+
 }
