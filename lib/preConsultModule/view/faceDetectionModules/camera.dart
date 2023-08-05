@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -13,15 +11,11 @@ import 'package:medongosupport/preConsultModule/consts/appColors.dart';
 import 'package:medongosupport/preConsultModule/consts/screenSize.dart';
 import 'package:medongosupport/preConsultModule/controllers/preConsultationController.dart';
 import 'package:medongosupport/preConsultModule/controllers/questionsController.dart';
-import 'package:medongosupport/preConsultModule/view/faceDetectionModules/detector.dart';
 import 'package:medongosupport/preConsultModule/widgets/alertDialogs.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'dart:ui' as ui;
 import '../../models/videoErrorModel.dart';
 import '../questionModules/questionsScreen.dart';
-  import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
 
@@ -504,9 +498,7 @@ class _CameraViewState extends State<CameraView>
         }
         preConsultationController.frameCounter.value++;
         break;
-
       case 1:
-
         ///vikas chnages ....
         try {
           final WriteBuffer allBytes = WriteBuffer();
