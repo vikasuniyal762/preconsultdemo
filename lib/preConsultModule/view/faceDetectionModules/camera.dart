@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:medongosupport/itachyonSupportModule/views/splashPage.dart';
@@ -12,18 +13,16 @@ import 'package:medongosupport/preConsultModule/consts/screenSize.dart';
 import 'package:medongosupport/preConsultModule/controllers/preConsultationController.dart';
 import 'package:medongosupport/preConsultModule/controllers/questionsController.dart';
 import 'package:medongosupport/preConsultModule/widgets/alertDialogs.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'dart:ui' as ui;
 import '../../models/videoErrorModel.dart';
 import '../questionModules/questionsScreen.dart';
 import 'package:image/image.dart' as img;
 
-
-
 class CameraSingleton {
   static CameraSingleton? instance;
   late CameraController cameraController;
-
 
   factory CameraSingleton() {
     instance ??= CameraSingleton.internal();
@@ -77,9 +76,7 @@ class _CameraViewState extends State<CameraView>
   final GlobalKey<_CameraViewState> cameraKey = GlobalKey<_CameraViewState>();
 
   ///ZOOM LEVELS - NOT USED - FUTURE USE
-  double zoomLevel = 0.0,
-      minZoomLevel = 0.0,
-      maxZoomLevel = 0.0;
+  double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
 
   ///FOCUS
   Offset? tapPosition;
@@ -92,10 +89,8 @@ class _CameraViewState extends State<CameraView>
   late Animation<double> _exposureModeControlRowAnimation;
   String output = '';
 
-
   ///
   late CameraSingleton cameraSingleton;
-
 
   @override
   void initState() {
@@ -126,9 +121,7 @@ class _CameraViewState extends State<CameraView>
 
   void autoFocusOnTap(TapDownDetails details) {
     if (cameraSingleton.cameraController.value.isInitialized) {
-      final screenSize = MediaQuery
-          .of(context)
-          .size;
+      final screenSize = MediaQuery.of(context).size;
       final focusPoint = Offset(
         details.localPosition.dx / screenSize.width,
         details.localPosition.dy / screenSize.height,
@@ -179,126 +172,123 @@ class _CameraViewState extends State<CameraView>
   Widget build(BuildContext context) {
     return SafeArea(
         child: GetBuilder(
-          init: PCPreConsultationController(),
-          builder: (_) {
-            return Scaffold(
-              backgroundColor: AppColor.transparent,
-              appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(100.0),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 0.0, left: 0.0, right: 0.0),
-                  child: Card(
-                    elevation: 2,
-                    child: Container(
-                      color: AppColor.white,
-                      width: ScreenSize.width(context),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .spaceBetween,
-                        // Aligns text and IconButton at start and end of Row
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 18.0),
-                            child: Text(
-                              "Detecting Face",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500, fontSize: 20),
-                            ),
-                          ),
-
-                          SizedBox(
-                            width: ScreenSize.width(context) * 0.4,
-                          ),
-
-                          ///RESTART BUTTON
-                          IconButton(
-                            icon: const Icon(
-                              Icons.restart_alt,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () {
-                              yesNoDialog(
-                                  context: context,
-                                  text: "Do you want to re-start the application?",
-                                  onTapAction: () async {
-                                    await Restart.restartApp();
-                                  });
-                            },
-                          ),
-
-                          ///HELP BUTTON
-                          IconButton(
-                            icon: const Icon(
-                              Icons.help,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () {
-                              ///TODO - UNCOMMENT IN NATIVE ANDROID
-                              Get.to(() => const ITSupportMain());
-                            },
-                          ),
-                        ],
+      init: PCPreConsultationController(),
+      builder: (_) {
+        return Scaffold(
+          backgroundColor: AppColor.transparent,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(100.0),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 0.0, left: 0.0, right: 0.0),
+              child: Card(
+                elevation: 2,
+                child: Container(
+                  color: AppColor.white,
+                  width: ScreenSize.width(context),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Aligns text and IconButton at start and end of Row
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 18.0),
+                        child: Text(
+                          "Detecting Face",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 20),
+                        ),
                       ),
-                    ),
+
+                      SizedBox(
+                        width: ScreenSize.width(context) * 0.4,
+                      ),
+
+                      ///RESTART BUTTON
+                      IconButton(
+                        icon: const Icon(
+                          Icons.restart_alt,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          yesNoDialog(
+                              context: context,
+                              text: "Do you want to re-start the application?",
+                              onTapAction: () async {
+                                await Restart.restartApp();
+                              });
+                        },
+                      ),
+
+                      ///HELP BUTTON
+                      IconButton(
+                        icon: const Icon(
+                          Icons.help,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          ///TODO - UNCOMMENT IN NATIVE ANDROID
+                          Get.to(() => const ITSupportMain());
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
-              body: GestureDetector(
-                onTapDown: autoFocusOnTap,
-                child: SafeArea(
-                    child: SizedBox(
-                      width: ScreenSize.width(context),
-                      child: startLiveFeedBody(),
-                    )),
-              ),
-              floatingActionButtonLocation:
+            ),
+          ),
+          body: GestureDetector(
+            onTapDown: autoFocusOnTap,
+            child: SafeArea(
+                child: SizedBox(
+              width: ScreenSize.width(context),
+              child: startLiveFeedBody(),
+            )),
+          ),
+          floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
-              bottomNavigationBar: Container(
-                decoration: const BoxDecoration(
-                    color: AppColor.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10.0),
-                      topRight: Radius.circular(10.0),
-                    )),
-                height: ScreenSize.height(context) * 0.13,
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 10.0,
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                      child: Obx(
-                            () =>
-                            Center(
-                                child: AutoSizeText(
-                                  preConsultationController.bottomMessage.value,
-                                  maxLines: 1,
-                                  minFontSize: 12,
-                                  maxFontSize: 24,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: AppColor.blackMild,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15.0),
-                                )),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 0.0,
-                    ),
-
-                    ///BOTTOM BUTTON
-                    Obx(() => bottomSheetForRecordingAndStatus()),
-                  ],
+          bottomNavigationBar: Container(
+            decoration: const BoxDecoration(
+                color: AppColor.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10.0),
+                  topRight: Radius.circular(10.0),
+                )),
+            height: ScreenSize.height(context) * 0.13,
+            child: Column(
+              children: [
+                const SizedBox(
+                  height: 10.0,
                 ),
-              ),
-            );
-          },
-        ));
+
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                  child: Obx(
+                    () => Center(
+                        child: AutoSizeText(
+                      preConsultationController.bottomMessage.value,
+                      maxLines: 1,
+                      minFontSize: 12,
+                      maxFontSize: 24,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: AppColor.blackMild,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.0),
+                    )),
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 0.0,
+                ),
+
+                ///BOTTOM BUTTON
+                Obx(() => bottomSheetForRecordingAndStatus()),
+              ],
+            ),
+          ),
+        );
+      },
+    ));
   }
 
   Widget bottomSheetForRecordingAndStatus() {
@@ -309,24 +299,25 @@ class _CameraViewState extends State<CameraView>
     } else {
       return GestureDetector(
           onTap: () async =>
-          preConsultationController.isRecording.value == false
-              ? await captureImage()
-              : await stopRecordingAndResetAllValues(),
+              preConsultationController.isRecording.value == false
+                  ? await captureImage()
+                  : await stopRecordingAndResetAllValues(),
           child: preConsultationController.isRecording.value == false
               ? titleButtonForBottomSheet(
-              text: "START RECORDING",
-              icon: Icons.camera_alt,
-              iconColor: AppColor.primaryColor)
+                  text: "START RECORDING",
+                  icon: Icons.camera_alt,
+                  iconColor: AppColor.primaryColor)
               : titleButtonForBottomSheet(
-              text: "STOP RECORDING",
-              icon: Icons.stop_circle_outlined,
-              iconColor: AppColor.red));
+                  text: "STOP RECORDING",
+                  icon: Icons.stop_circle_outlined,
+                  iconColor: AppColor.red));
     }
   }
 
-  Widget titleButtonForBottomSheet({required String? text,
-    required IconData icon,
-    required Color? iconColor}) {
+  Widget titleButtonForBottomSheet(
+      {required String? text,
+      required IconData icon,
+      required Color? iconColor}) {
     return Card(
       elevation: 3.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -376,9 +367,7 @@ class _CameraViewState extends State<CameraView>
     if (cameraSingleton.cameraController.value.isInitialized == false) {
       return Container();
     }
-    final size = MediaQuery
-        .of(context)
-        .size;
+    final size = MediaQuery.of(context).size;
 
     var scale =
         size.aspectRatio * cameraSingleton.cameraController!.value.aspectRatio;
@@ -387,59 +376,55 @@ class _CameraViewState extends State<CameraView>
     if (scale < 1) scale = 1 / scale;
 
     return Obx(
-          () =>
-          Container(
-            color: Colors.black,
-            child: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                Transform.scale(
-                  scale: scale,
-                  child: Center(
-                    child: preConsultationController.isReleased.value == false
-                        ? (CameraPreview(cameraSingleton.cameraController))
-                        : null,
-                  ),
-                ),
-                if (widget.customPaint != null) widget.customPaint!,
-                Positioned(
-                    bottom: ScreenSize.height(context) * 0,
-                    //bottom: 0.1,
-                    //left: 187,
-                    left: ScreenSize.width(context) * 0.3,
-                    child: _modeControlRowWidget()),
-                Obx(
-                      () =>
-                      Positioned(
-                          top: ScreenSize.height(context) * 0.001,
-                          left: ScreenSize.width(context) * 0.4,
-                          child: preConsultationController.lowLight.value ==
-                              true &&
-                              preConsultationController.badQuality.value == true
-                              ? Container(
-                            alignment: Alignment.center,
-                            margin: EdgeInsets.symmetric(
-                                vertical: 5.0, horizontal: 15.0),
-                            padding: EdgeInsets.symmetric(
-                                vertical: 5.0, horizontal: 15.0),
-                            decoration: BoxDecoration(
-                                color: AppColor.white,
-                                borderRadius: BorderRadius.circular(30.0)
-                            ),
-                            child: Center(
-                              child: Text("Low Light",
-                                  style: TextStyle(
-                                    color: AppColor.red,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 20,
-                                  )),
-                            ),
-                          )
-                              : const Text("")),
-                ),
-              ],
+      () => Container(
+        color: Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Transform.scale(
+              scale: scale,
+              child: Center(
+                child: preConsultationController.isReleased.value == false
+                    ? (CameraPreview(cameraSingleton.cameraController))
+                    : null,
+              ),
             ),
-          ),
+            if (widget.customPaint != null) widget.customPaint!,
+            Positioned(
+                bottom: ScreenSize.height(context) * 0,
+                //bottom: 0.1,
+                //left: 187,
+                left: ScreenSize.width(context) * 0.3,
+                child: _modeControlRowWidget()),
+            Obx(
+              () => Positioned(
+                  top: ScreenSize.height(context) * 0.001,
+                  left: ScreenSize.width(context) * 0.4,
+                  child: preConsultationController.lowLight.value == true &&
+                          preConsultationController.badQuality.value == true
+                      ? Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.symmetric(
+                              vertical: 5.0, horizontal: 15.0),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 5.0, horizontal: 15.0),
+                          decoration: BoxDecoration(
+                              color: AppColor.white,
+                              borderRadius: BorderRadius.circular(30.0)),
+                          child: Center(
+                            child: Text("Low Light",
+                                style: TextStyle(
+                                  color: AppColor.red,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 20,
+                                )),
+                          ),
+                        )
+                      : const Text("")),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -452,28 +437,25 @@ class _CameraViewState extends State<CameraView>
           for (final Plane plane in image.planes) {
             allBytes.putUint8List(plane.bytes);
           }
-          final bytes = allBytes
-              .done()
-              .buffer
-              .asUint8List();
+          final bytes = allBytes.done().buffer.asUint8List();
 
           final Size imageSize =
-          Size(image.width.toDouble(), image.height.toDouble());
+              Size(image.width.toDouble(), image.height.toDouble());
 
           ///CAMERA DESCRIPTION
           CameraDescription camera =
               preConsultationController.cameraDescriptionMain;
 
           final imageRotation =
-          InputImageRotationValue.fromRawValue(camera.sensorOrientation);
+              InputImageRotationValue.fromRawValue(camera.sensorOrientation);
           if (imageRotation == null) return;
 
           final inputImageFormat =
-          InputImageFormatValue.fromRawValue(image.format.raw);
+              InputImageFormatValue.fromRawValue(image.format.raw);
           if (inputImageFormat == null) return;
 
           final planeData = image.planes.map(
-                (Plane plane) {
+            (Plane plane) {
               return InputImagePlaneMetadata(
                 bytesPerRow: plane.bytesPerRow,
                 height: plane.height,
@@ -499,7 +481,6 @@ class _CameraViewState extends State<CameraView>
         preConsultationController.frameCounter.value++;
         break;
       case 1:
-        ///vikas chnages ....
         try {
           final WriteBuffer allBytes = WriteBuffer();
           for (final Plane plane in image.planes) {
@@ -507,23 +488,30 @@ class _CameraViewState extends State<CameraView>
           }
           final bytes = allBytes.done().buffer.asUint8List();
 
-          final originalImage = img.decodeImage(bytes);
-          if (originalImage == null) {
-            debugPrint("Error: Unable to decode the image.");
+          // Compress the image to JPG format
+          final compressedBytes = await FlutterImageCompress.compressWithList(
+            bytes,
+            format: CompressFormat.jpeg,
+            quality: 90,
+          );
+
+          // Store the compressed image data in a variable
+          final compressedImage = img.decodeImage(compressedBytes);
+          if (compressedImage == null) {
+            debugPrint("Error: Unable to decode the compressed image.");
             return;
           }
 
           final faceImage = img.copyCrop(
-            originalImage,
+            compressedImage,
             x: preConsultationController.left.value,
             y: preConsultationController.top.value,
             width: preConsultationController.width.value,
             height: preConsultationController.height.value,
           );
+
           print('face image: $faceImage');
 
-          // You can call the cropImage function or any other processing function with the bytes here.
-          // await cropImage(bytes);
         } catch (error) {
           debugPrint("Error occurred while processing image: $error");
         }
@@ -552,28 +540,25 @@ class _CameraViewState extends State<CameraView>
           for (final Plane plane in image.planes) {
             allBytes.putUint8List(plane.bytes);
           }
-          final bytes = allBytes
-              .done()
-              .buffer
-              .asUint8List();
+          final bytes = allBytes.done().buffer.asUint8List();
 
           final Size imageSize =
-          Size(image.width.toDouble(), image.height.toDouble());
+              Size(image.width.toDouble(), image.height.toDouble());
 
           ///CAMERA DESCRIPTION
           CameraDescription camera =
               preConsultationController.cameraDescriptionMain;
 
           final imageRotation =
-          InputImageRotationValue.fromRawValue(camera.sensorOrientation);
+              InputImageRotationValue.fromRawValue(camera.sensorOrientation);
           if (imageRotation == null) return;
 
           final inputImageFormat =
-          InputImageFormatValue.fromRawValue(image.format.raw);
+              InputImageFormatValue.fromRawValue(image.format.raw);
           if (inputImageFormat == null) return;
 
           final planeData = image.planes.map(
-                (Plane plane) {
+            (Plane plane) {
               return InputImagePlaneMetadata(
                 bytesPerRow: plane.bytesPerRow,
                 height: plane.height,
@@ -599,20 +584,16 @@ class _CameraViewState extends State<CameraView>
             preConsultationController.updateDetectionError;
             if (preConsultationController.gotOffTime.value == false) {
               preConsultationController.faceOffTime = [
-                DateTime
-                    .now()
-                    .millisecondsSinceEpoch
+                DateTime.now().millisecondsSinceEpoch
               ];
 
               await preConsultationController.updateGotOffTimeError();
             }
             if (preConsultationController.gotOffTime.value == true) {
-              if (((DateTime
-                  .now()
-                  .millisecondsSinceEpoch -
-                  preConsultationController.faceOffTime[0]) /
-                  1000) >=
-                  5 &&
+              if (((DateTime.now().millisecondsSinceEpoch -
+                              preConsultationController.faceOffTime[0]) /
+                          1000) >=
+                      5 &&
                   preConsultationController.alertDialogShown.value == false) {
                 await preConsultationController.updateAlertDialogShown();
 
@@ -639,15 +620,15 @@ class _CameraViewState extends State<CameraView>
                     ],
                   ),
                   barrierDismissible:
-                  false, // Disable dismissing the dialog by tapping outside the dialog area
+                      false, // Disable dismissing the dialog by tapping outside the dialog area
                 );
               }
             }
           } else {
             preConsultationController.resetDetectionError;
             if (
-            //gotOffTime==true
-            preConsultationController.gotOffTime.value == true) {
+                //gotOffTime==true
+                preConsultationController.gotOffTime.value == true) {
               // setState(() {
               //   gotOffTime=false;
               // });
@@ -661,22 +642,21 @@ class _CameraViewState extends State<CameraView>
         break;
       case 1:
 
-      ///NO FACE DETECTED ERROR
+        ///NO FACE DETECTED ERROR
         if (preConsultationController.detectionError.value == true) {
           preConsultationController.errorTime = [
-            DateTime
-                .now()
-                .millisecondsSinceEpoch
+            DateTime.now().millisecondsSinceEpoch
           ];
           if (preConsultationController.errorTime.isNotEmpty) {
             int errorDuration = ((preConsultationController.errorTime[0] -
-                preConsultationController.startTime[0]) /
-                1000)
+                        preConsultationController.startTime[0]) /
+                    1000)
                 .round();
             if (errorDuration != preConsultationController.prevFaceError) {
               preConsultationController.errorLog
                   .add({"noFaceDetected": errorDuration});
-              addVideoErrorToLog(error: "noFaceDetected",
+              addVideoErrorToLog(
+                  error: "noFaceDetected",
                   time: errorDuration.toString(),
                   value: "0");
             }
@@ -693,21 +673,20 @@ class _CameraViewState extends State<CameraView>
       case 3:
         if (preConsultationController.badQuality.value == true) {
           preConsultationController.errorTime = [
-            DateTime
-                .now()
-                .millisecondsSinceEpoch
+            DateTime.now().millisecondsSinceEpoch
           ];
           if (preConsultationController.errorTime.isNotEmpty) {
             int errorDuration = ((preConsultationController.errorTime[0] -
-                preConsultationController.startTime[0]) /
-                1000)
+                        preConsultationController.startTime[0]) /
+                    1000)
                 .round();
             if (errorDuration != preConsultationController.prevBadLightError) {
               preConsultationController.errorLog.add({
                 "badLight": errorDuration,
                 "exposureValue": preConsultationController.grayScale.value
               });
-              addVideoErrorToLog(error: "badLight",
+              addVideoErrorToLog(
+                  error: "badLight",
                   time: errorDuration.toString(),
                   value: preConsultationController.grayScale.value.toString());
             }
@@ -723,21 +702,20 @@ class _CameraViewState extends State<CameraView>
       case 5:
         if (preConsultationController.lowLight.value == true) {
           preConsultationController.errorTime = [
-            DateTime
-                .now()
-                .millisecondsSinceEpoch
+            DateTime.now().millisecondsSinceEpoch
           ];
           if (preConsultationController.errorTime.isNotEmpty) {
             int errorDuration = ((preConsultationController.errorTime[0] -
-                preConsultationController.startTime[0]) /
-                1000)
+                        preConsultationController.startTime[0]) /
+                    1000)
                 .round();
             if (errorDuration != preConsultationController.prevLowLightError) {
               preConsultationController.errorLog.add({
                 "lowLight": errorDuration,
                 "luxValue": preConsultationController.lux.value
               });
-              addVideoErrorToLog(error: "lowLight",
+              addVideoErrorToLog(
+                  error: "lowLight",
                   time: errorDuration.toString(),
                   value: preConsultationController.lux.value.toString());
             }
@@ -782,9 +760,7 @@ class _CameraViewState extends State<CameraView>
 
         ///TAKING START TIME TO CALCULATE DURATION OF ERRORS BY SUBTRACTING IT FROM ERROR TIME
         preConsultationController.startTime = [
-          DateTime
-              .now()
-              .millisecondsSinceEpoch
+          DateTime.now().millisecondsSinceEpoch
         ];
 
         ///START VIDEO RECORDING AND SEND THE FRAMES TO PROCESS FOR FACE DETECTION
@@ -814,7 +790,6 @@ class _CameraViewState extends State<CameraView>
       await preConsultationController.stopRecordingAndNavigatesToNextPage();
       print("hihihi ${preConsultationController.errorLog}");
       print(videoErrorLog.map((document) => document.toJson()).toList());
-
 
       ///NAVIGATES IT QUESTIONS PAGE
       Future.delayed(const Duration(seconds: 2), () async {
@@ -869,12 +844,12 @@ class _CameraViewState extends State<CameraView>
             // The exposure and focus mode are currently not supported on the web.
             ...!kIsWeb
                 ? <Widget>[
-              IconButton(
-                  iconSize: 50.0,
-                  icon: const Icon(Icons.exposure),
-                  color: Colors.green,
-                  onPressed: onExposureModeButtonPressed),
-            ]
+                    IconButton(
+                        iconSize: 50.0,
+                        icon: const Icon(Icons.exposure),
+                        color: Colors.green,
+                        onPressed: onExposureModeButtonPressed),
+                  ]
                 : <Widget>[],
           ],
         ),
@@ -908,8 +883,7 @@ class _CameraViewState extends State<CameraView>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   TextButton(
-                    onPressed: () =>
-                    {
+                    onPressed: () => {
                       cameraSingleton.cameraController.setExposureOffset(0.0),
                       currentExposureOffset = 0.0
                     },
@@ -941,7 +915,7 @@ class _CameraViewState extends State<CameraView>
                     max: _maxAvailableExposureOffset,
                     label: currentExposureOffset.toString(),
                     onChanged: _minAvailableExposureOffset ==
-                        _maxAvailableExposureOffset
+                            _maxAvailableExposureOffset
                         ? null
                         : setExposureOffset,
                   ),
@@ -977,7 +951,6 @@ class _CameraViewState extends State<CameraView>
       _exposureModeControlRowAnimationController.forward();
     }
   }
-
 
   List<VideoError> videoErrorLog = [];
 

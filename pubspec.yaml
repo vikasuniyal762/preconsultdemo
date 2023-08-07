@@ -40,6 +40,7 @@ dependencies:
   chips_choice: ^3.0.0
   auto_size_text: ^3.0.0 #RESIZES THE TEXT BASED ON LAYOUT ORIENTATION
   image: ^4.0.17
+  flutter_image_compress: ^2.0.4
   #expandable_fab_menu: ^0.0.1
   #flutter_expandable_fab: ^1.7.1
   timer_count_down: ^2.2.2
