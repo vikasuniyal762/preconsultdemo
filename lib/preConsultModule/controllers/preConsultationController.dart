@@ -23,13 +23,10 @@ import 'package:image/image.dart' as img;
 
 import '../widgets/alertDialogs.dart';
 
-
 final PCPreConsultationController preConsultationController =
-Get.find<PCPreConsultationController>();
+    Get.find<PCPreConsultationController>();
 
 class PCPreConsultationController extends GetxController {
-
-
   ///IMAGE FILE PATH FOR UI
   RxString imageForDisplayInTheDevice = "".obs;
 
@@ -55,12 +52,6 @@ class PCPreConsultationController extends GetxController {
   ///CALL BACK METHOD TO HANDLE STATE OF CAPTURING IMAGE AND VIDEO
   late Future<void> initializeFutureCameraController;
 
-
-  ///dekhne ke liye
-  late File finalImage;
-
-
-
   ///MANAGES STATE OF RECORDING
   RxBool isRecording = false.obs;
 
@@ -84,10 +75,12 @@ class PCPreConsultationController extends GetxController {
 
   ///USED IN DETECTOR
   RxInt frameCounter = 0.obs;
-  resetFrameCounter() async{
-    preConsultationController.frameCounter.value=0;
+
+  resetFrameCounter() async {
+    preConsultationController.frameCounter.value = 0;
     update();
   }
+
   int frameInterval = 3;
 
   ///USED IN CAMERA
@@ -101,30 +94,120 @@ class PCPreConsultationController extends GetxController {
   RxBool lowLight = false.obs;
   RxBool badQuality = false.obs;
   RxInt lux = 0.obs;
+
   ///VIDEO QUALITY PARAMETER (GRAYSCALE BRIGHTNESS)
+  // void calculateAverageGrayscaleBrightness(CameraImage image) {
+  //   double btSum = 0;
+  //   int totalPixels = image.width * image.height;
+  //
+  //   final plane = image.planes[0]; // Assuming Y component is stored in the first plane
+  //
+  //   final bytes = plane.bytes;
+  //   for (int i = 0; i < bytes.length; i++) {
+  //     final yValue = bytes[i];
+  //     btSum += yValue;
+  //   }
+  //
+  //   preConsultationController.grayScale.value = btSum / totalPixels;
+  //   preConsultationController.grayScale.value < 135 ?
+  //   preConsultationController.badQuality.value = true
+  //       :
+  //   preConsultationController.badQuality.value = false;
+  // }
+
   void calculateAverageGrayscaleBrightness(CameraImage image) {
+
+try{
+    int left = preConsultationController.left.value;
+    int top = preConsultationController.top.value;
+    int right = preConsultationController.right.value;
+    int bottom = preConsultationController.bottom.value;
+
+
+    if (left != 0 && top != 0 && right != 0 && bottom != 0) {
     double btSum = 0;
-    int totalPixels = image.width * image.height;
-
-    final plane = image.planes[0]; // Assuming Y component is stored in the first plane
-
+    double btSm = 0;
+    int totalPixels = 0;
+    ///
+    int tpix=image.width * image.height;
+    ///
+    final plane =
+        image.planes[0]; // Assuming Y component is stored in the first plane
     final bytes = plane.bytes;
-    for (int i = 0; i < bytes.length; i++) {
-      final yValue = bytes[i];
-      btSum += yValue;
+      for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
+          // Calculate the index in the bytes array for the current (x, y) pixel
+          int index = y * plane.bytesPerRow + x;
+
+          // Ensure that the index is within bounds
+          if (index < bytes.length) {
+            final yValue = bytes[index];
+            btSum += yValue;
+            totalPixels++;
+          }
+        }
+      }
+      ///
+    final bts = plane.bytes;
+    for (int j = 0; j < bts.length; j++) {
+      final yVle = bts[j];
+      btSm += yVle;
     }
 
-    preConsultationController.grayScale.value = btSum / totalPixels;
-    preConsultationController.grayScale.value < 135 ?
-    preConsultationController.badQuality.value = true
-        :
-    preConsultationController.badQuality.value = false;
+    preConsultationController.grayScale.value = btSm / tpix;
+    print('Grayscale : ${preConsultationController.grayScale.value}');
+
+    ///
+
+
+      double averageGrayscale = btSum / totalPixels;
+      print('Average grayscale inside Bounding box : $averageGrayscale');
+      preConsultationController.grayScale.value = averageGrayscale;
+      preConsultationController.grayScale.value < 135 ?
+      preConsultationController.badQuality.value = true
+          :
+      preConsultationController.badQuality.value = false;
+
+
+
+      preConsultationController.left.value=0;
+      preConsultationController.top.value=0;
+      preConsultationController.right.value=0;
+      preConsultationController.bottom.value=0;
+
+    }
+    else{
+        double btSum = 0;
+        int totalPixels = image.width * image.height;
+
+        final plane = image.planes[0];
+
+        final bytes = plane.bytes;
+        for (int i = 0; i < bytes.length; i++) {
+          final yValue = bytes[i];
+          btSum += yValue;
+        }
+
+        preConsultationController.grayScale.value = btSum / totalPixels;
+        print('Grayscale : ${preConsultationController.grayScale.value}');
+        preConsultationController.grayScale.value < 135 ?
+        preConsultationController.badQuality.value = true
+            :
+        preConsultationController.badQuality.value = false;
+    }
+  } catch (e) {
+  if (kDebugMode) {
+    print('An error occurred: $e');
   }
+  }
+  }
+
   void calculateAverageGrayscaleBrightnessForVideo(CameraImage image) {
     double btSum = 0;
     int totalPixels = image.width * image.height;
 
-    final plane = image.planes[0]; // Assuming Y component is stored in the first plane
+    final plane =
+        image.planes[0]; // Assuming Y component is stored in the first plane
 
     final bytes = plane.bytes;
     for (int i = 0; i < bytes.length; i++) {
@@ -133,7 +216,9 @@ class PCPreConsultationController extends GetxController {
     }
 
     preConsultationController.grayScale.value = btSum / totalPixels;
-    if( preConsultationController.grayScale.value < 135 ){
+    print(
+        "GRAYSCALE WHILE RECORDING : ${preConsultationController.grayScale.value}");
+    if (preConsultationController.grayScale.value < 135) {
       preConsultationController.badQuality.value = true;
       // if(preConsultationController.isRecording.value==true) {
       //   preConsultationController.errorTime=[DateTime.now().millisecondsSinceEpoch];
@@ -142,20 +227,19 @@ class PCPreConsultationController extends GetxController {
       //     preConsultationController.errorLog.add({"badLight": errorDuration/1000});
       //   }
       // }
+    } else {
+      preConsultationController.badQuality.value = false;
     }
-    else {
-      preConsultationController.badQuality.value = false;}
   }
+
   ///VIDEO QUALITY PARAMETER (LIGHT LUX VALUE FROM LIGHT SENSOR AT FRONT OF DEVICE)
   void calculateLight() {
     try {
       Light().lightSensorStream.listen((int luxValue) {
         preConsultationController.lux.value = luxValue;
-        preConsultationController.lux.value < 9?
-        preConsultationController.lowLight.value = true
-            :
-        preConsultationController.lowLight.value = false;
-
+        preConsultationController.lux.value < 9
+            ? preConsultationController.lowLight.value = true
+            : preConsultationController.lowLight.value = false;
       });
     } on LightException catch (exception) {
       if (kDebugMode) {
@@ -163,11 +247,12 @@ class PCPreConsultationController extends GetxController {
       }
     }
   }
+
   void calculateLightForVideo() {
     try {
       Light().lightSensorStream.listen((int luxValue) {
         preConsultationController.lux.value = luxValue;
-        if(preConsultationController.lux.value < 9){
+        if (preConsultationController.lux.value < 9) {
           preConsultationController.lowLight.value = true;
           // if(preConsultationController.isRecording.value==true) {
           //   preConsultationController.errorTime=[DateTime.now().millisecondsSinceEpoch];
@@ -176,8 +261,7 @@ class PCPreConsultationController extends GetxController {
           //     preConsultationController.errorLog.add({"lowLight": errorDuration/1000});
           //   }
           //}
-        }
-        else {
+        } else {
           preConsultationController.lowLight.value = false;
         }
       });
@@ -187,51 +271,55 @@ class PCPreConsultationController extends GetxController {
       }
     }
   }
+
   ///ERROR LOGGING
-  List<Map<dynamic,dynamic>> errorLog=[];
-  List startTime=[];
-  List errorTime=[];
-  int prevFaceError=0;
-  int prevBadLightError=0;
-  int prevLowLightError=0;
+  List<Map<dynamic, dynamic>> errorLog = [];
+  List startTime = [];
+  List errorTime = [];
+  int prevFaceError = 0;
+  int prevBadLightError = 0;
+  int prevLowLightError = 0;
 
-  RxBool detectionError=false.obs;
-  resetDetectionError() async{
-    preConsultationController.detectionError.value=false;
-    update();
-  }
-  updateDetectionError()async{
-    preConsultationController.detectionError.value=true;
+  RxBool detectionError = false.obs;
+
+  resetDetectionError() async {
+    preConsultationController.detectionError.value = false;
     update();
   }
 
-  RxBool alertDialogShown=false.obs;
-  resetAlertDialogShown() async{
-    preConsultationController.alertDialogShown.value=false;
-    update();
-  }
-  updateAlertDialogShown()async{
-    preConsultationController.alertDialogShown.value=true;
+  updateDetectionError() async {
+    preConsultationController.detectionError.value = true;
     update();
   }
 
+  RxBool alertDialogShown = false.obs;
 
+  resetAlertDialogShown() async {
+    preConsultationController.alertDialogShown.value = false;
+    update();
+  }
 
+  updateAlertDialogShown() async {
+    preConsultationController.alertDialogShown.value = true;
+    update();
+  }
 
   ///THESE ARE USED IN START VIDEO RECORDING
 
-
   ///COUNTER USED TO TRACK IF THE PATIENT IS VISIBLE OR NOT VISIBLE IN THE FRAME
-  List faceOffTime=[];
-  RxBool gotOffTime=false.obs;
-  resetGotOffTimeError() async{
-    preConsultationController.gotOffTime.value=false;
+  List faceOffTime = [];
+  RxBool gotOffTime = false.obs;
+
+  resetGotOffTimeError() async {
+    preConsultationController.gotOffTime.value = false;
     update();
   }
-  updateGotOffTimeError()async{
-    preConsultationController.gotOffTime.value=true;
+
+  updateGotOffTimeError() async {
+    preConsultationController.gotOffTime.value = true;
     update();
   }
+
   RxBool isFaceDetected = false.obs;
   RxBool isImageCaptured = false.obs;
   RxBool isVideoRecorded = false.obs;
@@ -241,10 +329,8 @@ class PCPreConsultationController extends GetxController {
   ///FACE DETECTION CONTROLLER FIELDS
   final FaceDetector faceDetector = FaceDetector(
     options: FaceDetectorOptions(
-      performanceMode: FaceDetectorMode.accurate,
       enableContours: true,
-      enableLandmarks: true,
-      //enableClassification: true,
+      enableClassification: true,
     ),
   );
 
@@ -259,31 +345,30 @@ class PCPreConsultationController extends GetxController {
   ///VIKAS CHANGES
   RxInt imageheight = 0.obs;
   RxInt imagewidth = 0.obs;
-  RxInt left =0.obs;
-  RxInt top =0.obs;
-  RxInt width =0.obs;
-  RxInt height =0.obs;
-
-
+  RxInt left = 0.obs;
+  RxInt top = 0.obs;
+  RxInt right = 0.obs;
+  RxInt bottom = 0.obs;
 
   ///ANDROID NATIVE DATA TRANSFER MODEL
   AndroidNativeDataTransferModel androidNativeDataTransferModel =
-  AndroidNativeDataTransferModel(
-      clinicId: "",
-      colorCode: "",
-      appName: "",
-      instituteId: "",
-      partyId: "",
-      tabCode: "",
-      shift: 0,
-      bucketName: "",
-      accessName: "",
-      regionId: "",
-      keyName: "");
+      AndroidNativeDataTransferModel(
+          clinicId: "",
+          colorCode: "",
+          appName: "",
+          instituteId: "",
+          partyId: "",
+          tabCode: "",
+          shift: 0,
+          bucketName: "",
+          accessName: "",
+          regionId: "",
+          keyName: "");
 
   ///UPDATE VALUES FROM NATIVE METHOD INSIDE THE FLUTTER MODULE
   updateValueFromNativeMethod({var json}) async {
-    androidNativeDataTransferModel = AndroidNativeDataTransferModel.fromJson(json);
+    androidNativeDataTransferModel =
+        AndroidNativeDataTransferModel.fromJson(json);
     update();
   }
 
@@ -314,28 +399,21 @@ class PCPreConsultationController extends GetxController {
 
       // Future.delayed(const Duration(milliseconds: 10));
       ///TAKE IMAGE
-
-      final XFile imageFile = await cameraSingleton.cameraController.takePicture();
-
-
+      final XFile imageFile =
+          await cameraSingleton.cameraController.takePicture();
       final File capturedImage = File(imageFile.path);
+
       ///   VIKAS CHANGES
-
-
-           final originalImage = img.decodeImage(await capturedImage!.readAsBytes());
-              final faceImage = img.copyCrop(originalImage!,
-                  x:preConsultationController.left.value,
-                  y:preConsultationController.top.value,
-                  width:preConsultationController.width.value,
-                  height:preConsultationController.height.value);
-              final croppedPath = capturedImage.path;
-                  //.replaceFirst('.jpg', '_cropped.jpg');
-              final croppedImage = File(croppedPath).writeAsBytes(img.encodeJpg(faceImage));
-
-      ///
-
-
-
+      final originalImage = img.decodeImage(await capturedImage!.readAsBytes());
+      final faceImage = img.copyCrop(originalImage!,
+          x: preConsultationController.left.value,
+          y: preConsultationController.top.value,
+          width: preConsultationController.imagewidth.value,
+          height: preConsultationController.imageheight.value);
+      final croppedPath = capturedImage.path;
+      //.replaceFirst('.jpg', '_cropped.jpg');
+      final croppedImage =
+          File(croppedPath).writeAsBytes(img.encodeJpg(faceImage));
 
       ///ADDS FILE TO _profileImage folder
       // Get the app's external files directory
@@ -349,7 +427,7 @@ class PCPreConsultationController extends GetxController {
       /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
       Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
       Directory profileImageDir =
-      Directory(path.join(adkDir.path, '_profileImage'));
+          Directory(path.join(adkDir.path, '_profileImage'));
 
       if (!adkDir.existsSync()) {
         adkDir.createSync(recursive: true);
@@ -362,7 +440,8 @@ class PCPreConsultationController extends GetxController {
       String fileName = '${questionsController.patientId}.jpg';
 
       /// Copy the image file to the desired location
-      File finalImage = await capturedImage.copy(path.join(profileImageDir.path, fileName));
+      File finalImage =
+          await capturedImage.copy(path.join(profileImageDir.path, fileName));
 
       // Future.delayed(const Duration(milliseconds: 10));
 
@@ -380,19 +459,16 @@ class PCPreConsultationController extends GetxController {
       isImageCaptured.value = true;
 
       update();
-
-
     } catch (error) {
       Future.delayed(const Duration(seconds: 2));
-      try{
+      try {
         ///STOP IMAGE STREAM WHICH IS DETECTING FACES
-        await cameraSingleton.cameraController
-            .stopImageStream();
+        await cameraSingleton.cameraController.stopImageStream();
 
         //Future.delayed(const Duration(milliseconds: 10));
         ///TAKE IMAGE
-        final XFile imageFile = await cameraSingleton.cameraController.takePicture();
-
+        final XFile imageFile =
+            await cameraSingleton.cameraController.takePicture();
 
         final File capturedImage = File(imageFile.path);
 
@@ -408,7 +484,7 @@ class PCPreConsultationController extends GetxController {
         /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
         Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
         Directory profileImageDir =
-        Directory(path.join(adkDir.path, '_profileImage'));
+            Directory(path.join(adkDir.path, '_profileImage'));
 
         if (!adkDir.existsSync()) {
           adkDir.createSync(recursive: true);
@@ -421,7 +497,8 @@ class PCPreConsultationController extends GetxController {
         String fileName = '${questionsController.patientId}.jpg';
 
         /// Copy the image file to the desired location
-        finalImage = await capturedImage.copy(path.join(profileImageDir.path, fileName));
+        File finalImage =
+            await capturedImage.copy(path.join(profileImageDir.path, fileName));
 
         Future.delayed(const Duration(milliseconds: 10));
 
@@ -436,8 +513,7 @@ class PCPreConsultationController extends GetxController {
         ///UPDATES STATUS OF IMAGE CAPTURED
         isImageCaptured.value = true;
         update();
-
-      }catch(error2){
+      } catch (error2) {
         showToast("FAILED TO CAPTURE IMAGE", ToastGravity.TOP);
       }
     }
@@ -449,10 +525,9 @@ class PCPreConsultationController extends GetxController {
     try {
       /// Future.delayed(const Duration(seconds: 3));
 
-
       ///STOPS RECORDING AND UPDATES VIDEO TO FILE
-      final XFile videoFile = await cameraSingleton.cameraController
-          .stopVideoRecording();
+      final XFile videoFile =
+          await cameraSingleton.cameraController.stopVideoRecording();
       if (kDebugMode) {
         print("hi from stopVideoRecording");
       }
@@ -473,7 +548,7 @@ class PCPreConsultationController extends GetxController {
       /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
       Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
       Directory profileImageDir =
-      Directory(path.join(adkDir.path, '_Documents'));
+          Directory(path.join(adkDir.path, '_Documents'));
 
       if (!adkDir.existsSync()) {
         adkDir.createSync(recursive: true);
@@ -483,14 +558,17 @@ class PCPreConsultationController extends GetxController {
       }
 
       /// Generate a unique filename for the image
-      String fileName = '${questionsController.appointmentId}_PROFILE_VIDEO.mp4';
+      String fileName =
+          '${questionsController.appointmentId}_PROFILE_VIDEO.mp4';
 
       /// Copy the image file to the desired location
-      File finalVideo = await capturedVideo.copy(path.join(profileImageDir.path, fileName));
+      File finalVideo =
+          await capturedVideo.copy(path.join(profileImageDir.path, fileName));
 
       if (kDebugMode) {
         print("hi from finalVIdeo save");
       }
+
       ///UPDATES IMAGE PATH
       userController.updateUserPersonalDetails(
           field: "video", response: finalVideo.path);
@@ -499,20 +577,17 @@ class PCPreConsultationController extends GetxController {
       attachmentsController.addDataToMainAttachments(
           key: "PROFILE_VIDEO", path: finalVideo.path);
       print("hi from adding to main attachment list");
+
       ///UPDATES THE FACE COUNT VALUE
       preConsultationController.faceCount.value = 0;
 
-
       cameraSingleton.releaseCamera();
       update();
-
-
     } catch (error) {
       print("hi from stoprecording and navigate catch block");
       debugPrint("$error");
     }
   }
-
 
   ///GETS CURRENT IMAGE OR VIDEO FILE PATH
   // Future<String> getFilePath({required bool isImage}) async {
@@ -550,7 +625,8 @@ class PCPreConsultationController extends GetxController {
   updateTheMessage({required int status}) {
     switch (status) {
       case 0:
-        bottomMessage.value = "PLEASE START THE RECORDING BY FOCUSING ON THE PATIENT'S FACE.";
+        bottomMessage.value =
+            "PLEASE START THE RECORDING BY FOCUSING ON THE PATIENT'S FACE.";
         break;
       case 1:
         bottomMessage.value = "PLEASE HOLD THE CAMERA STRAIGHT FOR 5 SECONDS.";
@@ -563,7 +639,7 @@ class PCPreConsultationController extends GetxController {
         break;
       case 4:
         bottomMessage.value =
-        "FACE NOT DETECTED FOR TOO LONG. RESTART THE PROCEDURE.";
+            "FACE NOT DETECTED FOR TOO LONG. RESTART THE PROCEDURE.";
         break;
       case 5:
         bottomMessage.value = "RECORDED THE VIDEO SUCCESSFULLY.";
@@ -575,7 +651,8 @@ class PCPreConsultationController extends GetxController {
         bottomMessage.value = "PLEASE BRING THE PATIENT IN FRAME.";
         break;
       case 8:
-        bottomMessage.value = "MULTIPLE FACES DETECTED. FOCUS ONLY ON ONE PATIENT";
+        bottomMessage.value =
+            "MULTIPLE FACES DETECTED. FOCUS ONLY ON ONE PATIENT";
         break;
       default:
         bottomMessage.value = "ERROR - RESTART THE RECORDING.";
@@ -591,7 +668,7 @@ class PCPreConsultationController extends GetxController {
       builder: (BuildContext context) {
         return AlertDialog(
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
           content: SizedBox(
             height: ScreenSize.height(context) * 0.5,
             width: ScreenSize.width(context) * 0.75,

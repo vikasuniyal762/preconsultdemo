@@ -104,16 +104,17 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       );
 
       ///vikas chnages
-      if (faces.length==1) {
+
+      if (faces.length == 1) {
         preConsultationController.faceCount.value = 1;
         final cropFace = faces.first;
         preConsultationController.left.value = cropFace.boundingBox.left.toInt();
         preConsultationController.top.value = cropFace.boundingBox.top.toInt();
-        preConsultationController.width.value = cropFace.boundingBox.width.toInt()*2;
-        preConsultationController.height.value = cropFace.boundingBox.height.toInt()*2;
-
+        preConsultationController.right.value = cropFace.boundingBox.right.toInt();
+        preConsultationController.bottom.value = cropFace.boundingBox.bottom.toInt();
+        preConsultationController.imageheight.value = cropFace.boundingBox.width.toInt() * 2;
+        preConsultationController.imagewidth.value = cropFace.boundingBox.height.toInt() * 2;
       }
-
       ///vikas chnages
 
       if(faces.length>1){
