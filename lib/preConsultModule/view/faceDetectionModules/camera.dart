@@ -496,14 +496,10 @@ class _CameraViewState extends State<CameraView>
         preConsultationController.frameCounter.value++;
         break;
       case 1:
+        preConsultationController.calculateAverageGrayscaleBrightnessNew(image);
         preConsultationController.frameCounter.value++;
         return;
       case 2:
-        print(preConsultationController.left.value);
-        print(preConsultationController.top.value);
-        print(preConsultationController.right.value);
-        print(preConsultationController.bottom.value);
-
         preConsultationController.calculateAverageGrayscaleBrightness(image);
         preConsultationController.frameCounter.value++;
         return;

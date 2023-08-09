@@ -24,7 +24,7 @@ import 'package:image/image.dart' as img;
 import '../widgets/alertDialogs.dart';
 
 final PCPreConsultationController preConsultationController =
-    Get.find<PCPreConsultationController>();
+Get.find<PCPreConsultationController>();
 
 class PCPreConsultationController extends GetxController {
   ///IMAGE FILE PATH FOR UI
@@ -95,119 +95,161 @@ class PCPreConsultationController extends GetxController {
   RxBool badQuality = false.obs;
   RxInt lux = 0.obs;
 
-  ///VIDEO QUALITY PARAMETER (GRAYSCALE BRIGHTNESS)
-  // void calculateAverageGrayscaleBrightness(CameraImage image) {
-  //   double btSum = 0;
-  //   int totalPixels = image.width * image.height;
-  //
-  //   final plane = image.planes[0]; // Assuming Y component is stored in the first plane
-  //
-  //   final bytes = plane.bytes;
-  //   for (int i = 0; i < bytes.length; i++) {
-  //     final yValue = bytes[i];
-  //     btSum += yValue;
-  //   }
-  //
-  //   preConsultationController.grayScale.value = btSum / totalPixels;
-  //   preConsultationController.grayScale.value < 135 ?
-  //   preConsultationController.badQuality.value = true
-  //       :
-  //   preConsultationController.badQuality.value = false;
-  // }
 
-  void calculateAverageGrayscaleBrightness(CameraImage image) {
+  ///VIKAS CHANGES
+  void calculateAverageGrayscaleBrightnessNew(CameraImage image) {
+    try {
+      int left = preConsultationController.left.value;
+      int top = preConsultationController.top.value;
+      int right = preConsultationController.right.value;
+      int bottom = preConsultationController.bottom.value;
 
-try{
-    int left = preConsultationController.left.value;
-    int top = preConsultationController.top.value;
-    int right = preConsultationController.right.value;
-    int bottom = preConsultationController.bottom.value;
-
-
-    if (left != 0 && top != 0 && right != 0 && bottom != 0) {
-    double btSum = 0;
-    double btSm = 0;
-    int totalPixels = 0;
-    ///
-    int tpix=image.width * image.height;
-    ///
-    final plane =
-        image.planes[0]; // Assuming Y component is stored in the first plane
-    final bytes = plane.bytes;
-      for (int y = top; y <= bottom; y++) {
-        for (int x = left; x <= right; x++) {
-          // Calculate the index in the bytes array for the current (x, y) pixel
-          int index = y * plane.bytesPerRow + x;
-
-          // Ensure that the index is within bounds
-          if (index < bytes.length) {
-            final yValue = bytes[index];
-            btSum += yValue;
-            totalPixels++;
-          }
-        }
-      }
-      ///
-    final bts = plane.bytes;
-    for (int j = 0; j < bts.length; j++) {
-      final yVle = bts[j];
-      btSm += yVle;
-    }
-
-    preConsultationController.grayScale.value = btSm / tpix;
-    print('Grayscale : ${preConsultationController.grayScale.value}');
-
-    ///
-
-
-      double averageGrayscale = btSum / totalPixels;
-      print('Average grayscale inside Bounding box : $averageGrayscale');
-      preConsultationController.grayScale.value = averageGrayscale;
-      preConsultationController.grayScale.value < 135 ?
-      preConsultationController.badQuality.value = true
-          :
-      preConsultationController.badQuality.value = false;
-
-
-
-      preConsultationController.left.value=0;
-      preConsultationController.top.value=0;
-      preConsultationController.right.value=0;
-      preConsultationController.bottom.value=0;
-
-    }
-    else{
-        double btSum = 0;
-        int totalPixels = image.width * image.height;
+      if (left != 0 && top != 0 && right != 0 && bottom != 0) {
+        double btSumInside = 0;
+        double btSumOutside = 0;
+        int totalPixelsInside = 0;
+        int totalPixelsOutside = 0;
 
         final plane = image.planes[0];
-
         final bytes = plane.bytes;
-        for (int i = 0; i < bytes.length; i++) {
-          final yValue = bytes[i];
-          btSum += yValue;
+
+        for (int y = 0; y < image.height; y++) {
+          for (int x = 0; x < image.width; x++) {
+            int index = y * plane.bytesPerRow + x;
+            if (x >= left && x <= right && y >= top && y <= bottom) {
+              if (index < bytes.length) {
+                final yValue = bytes[index];
+                btSumInside += yValue;
+                totalPixelsInside++;
+              }
+            } else {
+              if (index < bytes.length) {
+                final yValue = bytes[index];
+                btSumOutside += yValue;
+                totalPixelsOutside++;
+              }
+            }
+          }
         }
 
-        preConsultationController.grayScale.value = btSum / totalPixels;
-        print('Grayscale : ${preConsultationController.grayScale.value}');
-        preConsultationController.grayScale.value < 135 ?
-        preConsultationController.badQuality.value = true
-            :
-        preConsultationController.badQuality.value = false;
+        double averageGrayscaleInside = btSumInside / totalPixelsInside;
+        double averageGrayscaleOutside = btSumOutside / totalPixelsOutside;
+
+        print('Average grayscale inside Bounding box: $averageGrayscaleInside');
+        print('Average grayscale outside Bounding box: $averageGrayscaleOutside');
+
+        preConsultationController.grayScale.value = averageGrayscaleInside;
+        preConsultationController.grayScale.value < 135
+            ? preConsultationController.badQuality.value = true
+            : preConsultationController.badQuality.value = false;
+      }
+    } catch (e) {
+      print('Error calculating average grayscale brightness: $e');
     }
-  } catch (e) {
-  if (kDebugMode) {
-    print('An error occurred: $e');
   }
+
+
+
+
+
+
+
+  ///VIDEO QUALITY PARAMETER (GRAYSCALE BRIGHTNESS)
+  void calculateAverageGrayscaleBrightness(CameraImage image) {
+
+    // try{
+    //   /// GET THE VALUE OF BOUNDING BOX COORDINATES
+    //   int left = preConsultationController.left.value;
+    //   int top = preConsultationController.top.value;
+    //   int right = preConsultationController.right.value;
+    //   int bottom = preConsultationController.bottom.value;
+    //
+    //
+    //   if (left != 0 && top != 0 && right != 0 && bottom != 0) {
+    //     double btSum = 0;
+    //     double btSm = 0;
+    //     int totalPixels = 0;
+    //     ///
+    //     int tpix=image.width * image.height;
+    //     ///
+    //     final plane =
+    //     image.planes[0]; // Assuming Y component is stored in the first plane
+    //     final bytes = plane.bytes;
+    //     for (int y = top; y <= bottom; y++) {
+    //       for (int x = left; x <= right; x++) {
+    //         // Calculate the index in the bytes array for the current (x, y) pixel
+    //         int index = y * plane.bytesPerRow + x;
+    //
+    //         // Ensure that the index is within bounds
+    //         if (index < bytes.length) {
+    //           final yValue = bytes[index];
+    //           btSum += yValue;
+    //           totalPixels++;
+    //         }
+    //       }
+    //     }
+    //     ///
+    //     final bts = plane.bytes;
+    //     for (int j = 0; j < bts.length; j++) {
+    //       final yVle = bts[j];
+    //       btSm += yVle;
+    //     }
+    //
+    //     preConsultationController.grayScale.value = btSm / tpix;
+    //     print('Grayscale : ${preConsultationController.grayScale.value}');
+    //
+    //     ///
+    //
+    //
+    //     double averageGrayscale = btSum / totalPixels;
+    //     print('Average grayscale inside Bounding box : $averageGrayscale');
+    //     preConsultationController.grayScale.value = averageGrayscale;
+    //     preConsultationController.grayScale.value < 135 ?
+    //     preConsultationController.badQuality.value = true
+    //         :
+    //     preConsultationController.badQuality.value = false;
+    //
+    //     /// RESETTING THE BOUNDING BOX PARAMETERS
+    //     preConsultationController.left.value=0;
+    //     preConsultationController.top.value=0;
+    //     preConsultationController.right.value=0;
+    //     preConsultationController.bottom.value=0;
+    //
+    //   }
+    //   else{
+    //     double btSum = 0;
+    //     int totalPixels = image.width * image.height;
+    //
+    //     final plane = image.planes[0];
+    //
+    //     final bytes = plane.bytes;
+    //     for (int i = 0; i < bytes.length; i++) {
+    //       final yValue = bytes[i];
+    //       btSum += yValue;
+    //     }
+    //
+    //     preConsultationController.grayScale.value = btSum / totalPixels;
+    //     print('Grayscale : ${preConsultationController.grayScale.value}');
+    //     preConsultationController.grayScale.value < 135 ?
+    //     preConsultationController.badQuality.value = true
+    //         :
+    //     preConsultationController.badQuality.value = false;
+    //   }
+    // } catch (e) {
+    //   if (kDebugMode) {
+    //     print('An error occurred: $e');
+    //   }
+    // }
+    return;
   }
-  }
+  ///VIKAS CHANGES
 
   void calculateAverageGrayscaleBrightnessForVideo(CameraImage image) {
     double btSum = 0;
     int totalPixels = image.width * image.height;
 
     final plane =
-        image.planes[0]; // Assuming Y component is stored in the first plane
+    image.planes[0]; // Assuming Y component is stored in the first plane
 
     final bytes = plane.bytes;
     for (int i = 0; i < bytes.length; i++) {
@@ -343,6 +385,7 @@ try{
   RxString bottomMessage = "PLEASE START THE RECORDING".obs;
 
   ///VIKAS CHANGES
+
   RxInt imageheight = 0.obs;
   RxInt imagewidth = 0.obs;
   RxInt left = 0.obs;
@@ -352,18 +395,18 @@ try{
 
   ///ANDROID NATIVE DATA TRANSFER MODEL
   AndroidNativeDataTransferModel androidNativeDataTransferModel =
-      AndroidNativeDataTransferModel(
-          clinicId: "",
-          colorCode: "",
-          appName: "",
-          instituteId: "",
-          partyId: "",
-          tabCode: "",
-          shift: 0,
-          bucketName: "",
-          accessName: "",
-          regionId: "",
-          keyName: "");
+  AndroidNativeDataTransferModel(
+      clinicId: "",
+      colorCode: "",
+      appName: "",
+      instituteId: "",
+      partyId: "",
+      tabCode: "",
+      shift: 0,
+      bucketName: "",
+      accessName: "",
+      regionId: "",
+      keyName: "");
 
   ///UPDATE VALUES FROM NATIVE METHOD INSIDE THE FLUTTER MODULE
   updateValueFromNativeMethod({var json}) async {
@@ -400,7 +443,7 @@ try{
       // Future.delayed(const Duration(milliseconds: 10));
       ///TAKE IMAGE
       final XFile imageFile =
-          await cameraSingleton.cameraController.takePicture();
+      await cameraSingleton.cameraController.takePicture();
       final File capturedImage = File(imageFile.path);
 
       ///   VIKAS CHANGES
@@ -413,7 +456,7 @@ try{
       final croppedPath = capturedImage.path;
       //.replaceFirst('.jpg', '_cropped.jpg');
       final croppedImage =
-          File(croppedPath).writeAsBytes(img.encodeJpg(faceImage));
+      File(croppedPath).writeAsBytes(img.encodeJpg(faceImage));
 
       ///ADDS FILE TO _profileImage folder
       // Get the app's external files directory
@@ -427,7 +470,7 @@ try{
       /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
       Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
       Directory profileImageDir =
-          Directory(path.join(adkDir.path, '_profileImage'));
+      Directory(path.join(adkDir.path, '_profileImage'));
 
       if (!adkDir.existsSync()) {
         adkDir.createSync(recursive: true);
@@ -441,7 +484,7 @@ try{
 
       /// Copy the image file to the desired location
       File finalImage =
-          await capturedImage.copy(path.join(profileImageDir.path, fileName));
+      await capturedImage.copy(path.join(profileImageDir.path, fileName));
 
       // Future.delayed(const Duration(milliseconds: 10));
 
@@ -468,7 +511,7 @@ try{
         //Future.delayed(const Duration(milliseconds: 10));
         ///TAKE IMAGE
         final XFile imageFile =
-            await cameraSingleton.cameraController.takePicture();
+        await cameraSingleton.cameraController.takePicture();
 
         final File capturedImage = File(imageFile.path);
 
@@ -484,7 +527,7 @@ try{
         /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
         Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
         Directory profileImageDir =
-            Directory(path.join(adkDir.path, '_profileImage'));
+        Directory(path.join(adkDir.path, '_profileImage'));
 
         if (!adkDir.existsSync()) {
           adkDir.createSync(recursive: true);
@@ -498,7 +541,7 @@ try{
 
         /// Copy the image file to the desired location
         File finalImage =
-            await capturedImage.copy(path.join(profileImageDir.path, fileName));
+        await capturedImage.copy(path.join(profileImageDir.path, fileName));
 
         Future.delayed(const Duration(milliseconds: 10));
 
@@ -527,7 +570,7 @@ try{
 
       ///STOPS RECORDING AND UPDATES VIDEO TO FILE
       final XFile videoFile =
-          await cameraSingleton.cameraController.stopVideoRecording();
+      await cameraSingleton.cameraController.stopVideoRecording();
       if (kDebugMode) {
         print("hi from stopVideoRecording");
       }
@@ -548,7 +591,7 @@ try{
       /// Create the "ADK" and "_profileImage" subdirectories if they don't exist
       Directory adkDir = Directory(path.join(appDir.path, 'ADK'));
       Directory profileImageDir =
-          Directory(path.join(adkDir.path, '_Documents'));
+      Directory(path.join(adkDir.path, '_Documents'));
 
       if (!adkDir.existsSync()) {
         adkDir.createSync(recursive: true);
@@ -563,7 +606,7 @@ try{
 
       /// Copy the image file to the desired location
       File finalVideo =
-          await capturedVideo.copy(path.join(profileImageDir.path, fileName));
+      await capturedVideo.copy(path.join(profileImageDir.path, fileName));
 
       if (kDebugMode) {
         print("hi from finalVIdeo save");
@@ -626,7 +669,7 @@ try{
     switch (status) {
       case 0:
         bottomMessage.value =
-            "PLEASE START THE RECORDING BY FOCUSING ON THE PATIENT'S FACE.";
+        "PLEASE START THE RECORDING BY FOCUSING ON THE PATIENT'S FACE.";
         break;
       case 1:
         bottomMessage.value = "PLEASE HOLD THE CAMERA STRAIGHT FOR 5 SECONDS.";
@@ -639,7 +682,7 @@ try{
         break;
       case 4:
         bottomMessage.value =
-            "FACE NOT DETECTED FOR TOO LONG. RESTART THE PROCEDURE.";
+        "FACE NOT DETECTED FOR TOO LONG. RESTART THE PROCEDURE.";
         break;
       case 5:
         bottomMessage.value = "RECORDED THE VIDEO SUCCESSFULLY.";
@@ -652,7 +695,7 @@ try{
         break;
       case 8:
         bottomMessage.value =
-            "MULTIPLE FACES DETECTED. FOCUS ONLY ON ONE PATIENT";
+        "MULTIPLE FACES DETECTED. FOCUS ONLY ON ONE PATIENT";
         break;
       default:
         bottomMessage.value = "ERROR - RESTART THE RECORDING.";
@@ -668,7 +711,7 @@ try{
       builder: (BuildContext context) {
         return AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
           content: SizedBox(
             height: ScreenSize.height(context) * 0.5,
             width: ScreenSize.width(context) * 0.75,
