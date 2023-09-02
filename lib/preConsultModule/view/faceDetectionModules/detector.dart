@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,15 +110,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         final cropFace = faces.first;
         preConsultationController.left.value = cropFace.boundingBox.left.toInt();
         preConsultationController.top.value = cropFace.boundingBox.top.toInt();
-        preConsultationController.right.value = cropFace.boundingBox.right.toInt();
-        preConsultationController.bottom.value = cropFace.boundingBox.bottom.toInt();
-        preConsultationController.imageheight.value = cropFace.boundingBox.width.toInt() * 2;
-        preConsultationController.imagewidth.value = cropFace.boundingBox.height.toInt() * 2;
+        preConsultationController.right.value = (cropFace.boundingBox.right.toInt()*(1.3)).toInt();
+        preConsultationController.bottom.value = (cropFace.boundingBox.bottom.toInt()*(1.3)).toInt();
+        preConsultationController.imageheight.value = cropFace.boundingBox.width.toInt();
+        preConsultationController.imagewidth.value = cropFace.boundingBox.height.toInt();
       }
       ///vikas chnages
-
-
-
 
       if(faces.length>1){
         preConsultationController.faceCount.value = 2;

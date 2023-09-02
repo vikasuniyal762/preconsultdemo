@@ -148,12 +148,6 @@ class PCPreConsultationController extends GetxController {
     }
   }
 
-
-
-
-
-
-
   ///VIDEO QUALITY PARAMETER (GRAYSCALE BRIGHTNESS)
   void calculateAverageGrayscaleBrightness(CameraImage image) {
 
@@ -451,8 +445,10 @@ class PCPreConsultationController extends GetxController {
       final faceImage = img.copyCrop(originalImage!,
           x: preConsultationController.left.value,
           y: preConsultationController.top.value,
-          width: preConsultationController.imagewidth.value,
-          height: preConsultationController.imageheight.value);
+          width: preConsultationController.right.value,
+          height: preConsultationController.bottom.value);
+      // width: preConsultationController.imagewidth.value,
+      //     height: preConsultationController.imageheight.value);
       final croppedPath = capturedImage.path;
       //.replaceFirst('.jpg', '_cropped.jpg');
       final croppedImage =
