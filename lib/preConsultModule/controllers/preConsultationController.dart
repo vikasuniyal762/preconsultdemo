@@ -135,8 +135,8 @@ class PCPreConsultationController extends GetxController {
         double averageGrayscaleInside = btSumInside / totalPixelsInside;
         double averageGrayscaleOutside = btSumOutside / totalPixelsOutside;
 
-        print('Average grayscale inside Bounding box: $averageGrayscaleInside');
-        print('Average grayscale outside Bounding box: $averageGrayscaleOutside');
+        debugPrint('Average grayscale inside Bounding box: $averageGrayscaleInside');
+        debugPrint('Average grayscale outside Bounding box: $averageGrayscaleOutside');
 
         preConsultationController.grayScale.value = averageGrayscaleInside;
         preConsultationController.grayScale.value < 135
@@ -144,7 +144,7 @@ class PCPreConsultationController extends GetxController {
             : preConsultationController.badQuality.value = false;
       }
     } catch (e) {
-      print('Error calculating average grayscale brightness: $e');
+      debugPrint('Error calculating average grayscale brightness: $e');
     }
   }
 
@@ -236,7 +236,7 @@ class PCPreConsultationController extends GetxController {
     // }
     return;
   }
-  ///VIKAS CHANGES
+
 
   void calculateAverageGrayscaleBrightnessForVideo(CameraImage image) {
     double btSum = 0;
@@ -378,7 +378,7 @@ class PCPreConsultationController extends GetxController {
 
   RxString bottomMessage = "PLEASE START THE RECORDING".obs;
 
-  ///VIKAS CHANGES
+  ///VIKAS CHANGES DONE
 
   RxInt imageheight = 0.obs;
   RxInt imagewidth = 0.obs;
@@ -440,7 +440,7 @@ class PCPreConsultationController extends GetxController {
       await cameraSingleton.cameraController.takePicture();
       final File capturedImage = File(imageFile.path);
 
-      ///   VIKAS CHANGES
+      ///   VIKAS CHANGES DONE
       final originalImage = img.decodeImage(await capturedImage!.readAsBytes());
       final faceImage = img.copyCrop(originalImage!,
           x: preConsultationController.left.value,

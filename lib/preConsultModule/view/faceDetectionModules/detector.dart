@@ -104,7 +104,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
 
 
-      ///vikas chnages
+      ///vikas chnages DONE
       if (faces.length == 1) {
         preConsultationController.faceCount.value = 1;
         final cropFace = faces.first;
@@ -115,7 +115,6 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         preConsultationController.imageheight.value = cropFace.boundingBox.width.toInt();
         preConsultationController.imagewidth.value = cropFace.boundingBox.height.toInt();
       }
-      ///vikas chnages
 
       if(faces.length>1){
         preConsultationController.faceCount.value = 2;
