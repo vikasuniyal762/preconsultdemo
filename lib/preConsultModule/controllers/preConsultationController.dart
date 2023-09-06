@@ -269,13 +269,48 @@ class PCPreConsultationController extends GetxController {
   }
 
   ///VIDEO QUALITY PARAMETER (LIGHT LUX VALUE FROM LIGHT SENSOR AT FRONT OF DEVICE)
+  // void calculateLight() {
+  //   try {
+  //     Light().lightSensorStream.listen((int luxValue) {
+  //       preConsultationController.lux.value = luxValue;
+  //       preConsultationController.lux.value < 9
+  //           ? preConsultationController.lowLight.value = true
+  //           : preConsultationController.lowLight.value = false;
+  //     });
+  //   } on LightException catch (exception) {
+  //     if (kDebugMode) {
+  //       print(exception);
+  //     }
+  //   }
+  // }
+
   void calculateLight() {
     try {
       Light().lightSensorStream.listen((int luxValue) {
-        preConsultationController.lux.value = luxValue;
-        preConsultationController.lux.value < 9
-            ? preConsultationController.lowLight.value = true
-            : preConsultationController.lowLight.value = false;
+        lux.value = luxValue;
+
+        if (luxValue < 9) {
+          lowLight.value = true;
+          moderateLight.value = false;
+          goodLight.value = false;
+          badLight.value = false;
+        } else if (luxValue >= 9 && luxValue <= 50) {
+          lowLight.value = false;
+          moderateLight.value = true;
+          goodLight.value = false;
+          badLight.value = false;
+        } else if (luxValue > 50 && luxValue <= 200) {
+          lowLight.value = false;
+          moderateLight.value = false;
+          goodLight.value = true;
+          badLight.value = false;
+        } else {
+          // Lux value > 200
+          lowLight.value = false;
+          moderateLight.value = false;
+          goodLight.value = false;
+          badLight.value = true;
+        }
       });
     } on LightException catch (exception) {
       if (kDebugMode) {
@@ -374,7 +409,7 @@ class PCPreConsultationController extends GetxController {
   //CameraController? cameraControllerInstance;
 
   ///CAMERA INDEX FOR ORIENTATION OF CAMERA - FRONT AND BACK - USED IN CAMERA.DART
-  int cameraIndex = -1;
+  int cameraIndex = 0;
 
   RxString bottomMessage = "PLEASE START THE RECORDING".obs;
 
@@ -386,6 +421,11 @@ class PCPreConsultationController extends GetxController {
   RxInt top = 0.obs;
   RxInt right = 0.obs;
   RxInt bottom = 0.obs;
+
+  ///LIGHT ERROR
+  RxBool moderateLight = false.obs;
+  RxBool goodLight = false.obs;
+  RxBool badLight  = false.obs;
 
   ///ANDROID NATIVE DATA TRANSFER MODEL
   AndroidNativeDataTransferModel androidNativeDataTransferModel =

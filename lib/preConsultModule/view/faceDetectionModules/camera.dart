@@ -31,15 +31,23 @@ class CameraSingleton {
   CameraSingleton.internal();
 
   Future<void> initCamera() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    cameraController = CameraController(
+    try {
+      WidgetsFlutterBinding.ensureInitialized();
+      cameraController = CameraController(
         const CameraDescription(
-            name: '0',
-            lensDirection: CameraLensDirection.back,
-            sensorOrientation: 90),
-        ResolutionPreset.max);
-    await cameraController.initialize();
+          name: '0',
+          lensDirection: CameraLensDirection.back,
+          sensorOrientation: 90,
+        ),
+        ResolutionPreset.max,
+      );
+      await cameraController.initialize();
+    } catch (e) {
+      print('Error initializing camera: $e');
+      // Handle the error appropriately, e.g., show an error message to the user.
+    }
   }
+
 
   Future<void> releaseCamera() async {
     print("hi from singleton release cam");
@@ -100,7 +108,7 @@ class _CameraViewState extends State<CameraView>
       ///PORTRAIT ORIENTATION ONLY
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-      preConsultationController.cameraIndex = 0;
+      preConsultationController.cameraIndex = -1;
 
       ///START LIVE FEED ON INIT
       startLiveFeed();
@@ -123,41 +131,48 @@ class _CameraViewState extends State<CameraView>
 
   void autoFocusOnTap(TapDownDetails details) {
     if (cameraSingleton.cameraController.value.isInitialized) {
-      final screenSize = MediaQuery
-          .of(context)
-          .size;
+      final screenSize = MediaQuery.of(context).size;
       final focusPoint = Offset(
         details.localPosition.dx / screenSize.width,
         details.localPosition.dy / screenSize.height,
       );
-      cameraSingleton.cameraController.setExposurePoint(focusPoint);
-      cameraSingleton.cameraController.setFocusPoint(focusPoint);
-      cameraSingleton.cameraController.setFocusMode(FocusMode.auto);
+
+      try {
+        cameraSingleton.cameraController.setExposurePoint(focusPoint);
+        cameraSingleton.cameraController.setFocusPoint(focusPoint);
+        cameraSingleton.cameraController.setFocusMode(FocusMode.auto);
+      } catch (e) {
+        print('Error setting focus/exposure: $e');
+        // Handle the error appropriately, e.g., show an error message.
+      }
     }
   }
+
 
   Future startLiveFeed() async {
     try {
       cameraSingleton = CameraSingleton();
-      cameraSingleton.initCamera().then((_) {
-        cameraSingleton.cameraController.startImageStream(processCameraImage);
+      await cameraSingleton.initCamera();
+      cameraSingleton.cameraController.startImageStream(processCameraImage);
 
-        ///RESET LOADING INDICATORS
-        setState(() {
-          preConsultationController.isLoadingPermissionsPage.value = false;
-          preConsultationController.isLoadingFaceDetectorPage.value = false;
-          questionsController.isLoadingQuestions.value = false;
-          cameraSingleton.cameraController.setFocusMode(FocusMode.auto);
-        });
+      /// RESET LOADING INDICATORS
+      setState(() {
+        preConsultationController.isLoadingPermissionsPage.value = false;
+        preConsultationController.isLoadingFaceDetectorPage.value = false;
+        questionsController.isLoadingQuestions.value = false;
       });
+
+      // Set focus mode to auto after starting the image stream.
+      cameraSingleton.cameraController.setFocusMode(FocusMode.auto);
     } catch (error) {
-      debugPrint("Exception while initializing camera $error");
+      debugPrint("Exception while initializing camera: $error");
     }
 
-    ///TODO - UNCOMMENT IF IT DOESN'T WORK
-    ///RESETS AFTER LOADING CAMERA
-    //preConsultationController.resetLoadingStatusPermissionsPage();
+    /// TODO - UNCOMMENT IF IT DOESN'T WORK
+    /// RESETS AFTER LOADING CAMERA
+    // preConsultationController.resetLoadingStatusPermissionsPage();
   }
+
 
   @override
   void dispose() {
@@ -369,76 +384,244 @@ class _CameraViewState extends State<CameraView>
   }
 
   ///STARTS LIVE FEED BODY - DISPLAYS THE CAMERA VIEW
+  // Widget startLiveFeedBody() {
+  //   if (cameraSingleton.cameraController.value.isInitialized == false) {
+  //     return Container();
+  //   }
+  //   final size = MediaQuery
+  //       .of(context)
+  //       .size;
+  //
+  //   var scale =
+  //       size.aspectRatio * cameraSingleton.cameraController!.value.aspectRatio;
+  //
+  //   // to prevent scaling down, invert the value
+  //   if (scale < 1) scale = 1 / scale;
+  //
+  //   return Obx(
+  //         () =>
+  //         Container(
+  //           color: Colors.black,
+  //           child: Stack(
+  //             fit: StackFit.expand,
+  //             children: <Widget>[
+  //               Transform.scale(
+  //                 scale: scale,
+  //                 child: Center(
+  //                   child: preConsultationController.isReleased.value == false
+  //                       ? (CameraPreview(cameraSingleton.cameraController))
+  //                       : null,
+  //                 ),
+  //               ),
+  //               if (widget.customPaint != null) widget.customPaint!,
+  //               Positioned(
+  //                   bottom: ScreenSize.height(context) * 0,
+  //                   //bottom: 0.1,
+  //                   //left: 187,
+  //                   left: ScreenSize.width(context) * 0.3,
+  //                   child: _modeControlRowWidget()),
+  //               Obx(
+  //                     () =>
+  //                     Positioned(
+  //                         top: ScreenSize.height(context) * 0.001,
+  //                         left: ScreenSize.width(context) * 0.4,
+  //                         child: preConsultationController.lowLight.value ==
+  //                             true &&
+  //                             preConsultationController.badQuality.value == true
+  //                             ? Container(
+  //                           alignment: Alignment.center,
+  //                           margin: EdgeInsets.symmetric(
+  //                               vertical: 5.0, horizontal: 15.0),
+  //                           padding: EdgeInsets.symmetric(
+  //                               vertical: 5.0, horizontal: 15.0),
+  //                           decoration: BoxDecoration(
+  //                               color: AppColor.white,
+  //                               borderRadius: BorderRadius.circular(30.0)
+  //                           ),
+  //                           child: Center(
+  //                             child: Text("Low Light",
+  //                                 style: TextStyle(
+  //                                   color: AppColor.red,
+  //                                   fontWeight: FontWeight.w500,
+  //                                   fontSize: 20,
+  //                                 )),
+  //                           ),
+  //                         )
+  //                             : const Text("")),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //   );
+  // }
+
   Widget startLiveFeedBody() {
-    if (cameraSingleton.cameraController.value.isInitialized == false) {
+    bool isCameraInitialized = cameraSingleton.cameraController.value.isInitialized;
+    print("Camera is enabled: $isCameraInitialized"); // Add this line
+
+    if (!isCameraInitialized) {
       return Container();
     }
-    final size = MediaQuery
-        .of(context)
-        .size;
 
-    var scale =
-        size.aspectRatio * cameraSingleton.cameraController!.value.aspectRatio;
+    final size = MediaQuery.of(context).size;
+    var scale = size.aspectRatio * cameraSingleton.cameraController!.value.aspectRatio;
 
-    // to prevent scaling down, invert the value
+    // To prevent scaling down, invert the value
     if (scale < 1) scale = 1 / scale;
 
     return Obx(
-          () =>
-          Container(
-            color: Colors.black,
-            child: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                Transform.scale(
-                  scale: scale,
-                  child: Center(
-                    child: preConsultationController.isReleased.value == false
-                        ? (CameraPreview(cameraSingleton.cameraController))
-                        : null,
-                  ),
-                ),
-                if (widget.customPaint != null) widget.customPaint!,
-                Positioned(
-                    bottom: ScreenSize.height(context) * 0,
-                    //bottom: 0.1,
-                    //left: 187,
-                    left: ScreenSize.width(context) * 0.3,
-                    child: _modeControlRowWidget()),
-                Obx(
-                      () =>
-                      Positioned(
-                          top: ScreenSize.height(context) * 0.001,
-                          left: ScreenSize.width(context) * 0.4,
-                          child: preConsultationController.lowLight.value ==
-                              true &&
-                              preConsultationController.badQuality.value == true
-                              ? Container(
-                            alignment: Alignment.center,
-                            margin: EdgeInsets.symmetric(
-                                vertical: 5.0, horizontal: 15.0),
-                            padding: EdgeInsets.symmetric(
-                                vertical: 5.0, horizontal: 15.0),
-                            decoration: BoxDecoration(
-                                color: AppColor.white,
-                                borderRadius: BorderRadius.circular(30.0)
-                            ),
-                            child: Center(
-                              child: Text("Low Light",
-                                  style: TextStyle(
-                                    color: AppColor.red,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 20,
-                                  )),
-                            ),
-                          )
-                              : const Text("")),
-                ),
-              ],
+          () => Container(
+        color: Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Transform.scale(
+              scale: scale,
+              child: Center(
+                child: preConsultationController.isReleased.value == false
+                    ? (CameraPreview(cameraSingleton.cameraController))
+                    : null,
+              ),
             ),
-          ),
+            if (widget.customPaint != null) widget.customPaint!,
+            Positioned(
+              bottom: ScreenSize.height(context) * 0,
+              left: ScreenSize.width(context) * 0.3,
+              child: _modeControlRowWidget(),
+            ),
+            Obx(
+                  () => Positioned(
+                top: ScreenSize.height(context) * 0.001,
+                left: ScreenSize.width(context) * 0.4,
+                child:preConsultationController.lowLight.value == true &&
+                    preConsultationController.badQuality.value == true
+                    ? Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  padding: EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  decoration: BoxDecoration(
+                    color: AppColor.white,
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Low Light",
+                      style: TextStyle(
+                        color: AppColor.red,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                )
+                    : const Text(""),
+              ),
+            ),
+
+            Obx(
+                  () => Positioned(
+                top: ScreenSize.height(context) * 0.001,
+                left: ScreenSize.width(context) * 0.4,
+                child: preConsultationController.cameraDescriptionMain.lensDirection == CameraLensDirection.back
+                    ? (preConsultationController.lowLight.value == true
+                    ? Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: AppColor.white,
+                      borderRadius: BorderRadius.circular(30.0)),
+                  child: const Center(
+                    child: Text(
+                      "Low Light (Rear Camera)",
+                      style: TextStyle(
+                        color: AppColor.red,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                )
+                    : preConsultationController.moderateLight.value == true
+                    ? Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: AppColor.white,
+                      borderRadius: BorderRadius.circular(30.0)),
+                  child: const Center(
+                    child: Text(
+                      "Moderate Light (Rear Camera)",
+                      style: TextStyle(
+                        color: Colors.yellow,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                )
+                    : preConsultationController.goodLight.value == true
+                    ? Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: AppColor.white,
+                      borderRadius: BorderRadius.circular(30.0)),
+                  child: const Center(
+                    child: Text(
+                      "Good Light (Rear Camera)",
+                      style: TextStyle(
+                        color: AppColor.green,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                )
+                    : preConsultationController.badLight.value == true
+                    ? Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 15.0),
+                  decoration: BoxDecoration(
+                      color: AppColor.white,
+                      borderRadius:
+                      BorderRadius.circular(30.0)),
+                  child: const Center(
+                    child: Text(
+                      "Bad Light (Rear Camera)",
+                      style: TextStyle(
+                        color: AppColor.red,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                )
+                    : const Text(""))
+                    : const SizedBox(),
+              ),
+            ),
+
+
+          ],
+        ),
+      ),
     );
   }
+
 
   ///PROCESSES STREAM OF IMAGES FROM THE CAMERA TO DETECT FACE, CAPTURE IMAGE AND VIDEO
   Future processCameraImage(CameraImage image) async {
